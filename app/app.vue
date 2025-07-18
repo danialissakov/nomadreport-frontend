@@ -148,7 +148,7 @@ const submitForm = async () => {
   form.append('title', customTitle.value)
 
   try {
-    const res = await fetch('http://localhost:8000/generate-report', {
+    const res = await fetch(`${import.meta.env.API_BASE}/generate-report`, {
       method: 'POST',
       body: form
     })
