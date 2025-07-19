@@ -148,10 +148,10 @@ const submitForm = async () => {
   form.append('title', customTitle.value)
 
   try {
-    const res = await fetch(`${import.meta.env.API_BASE}/generate-report`, {
-      method: 'POST',
-      body: form
-    })
+const res = await fetch('https://nomadreport-backend.onrender.com/generate-report', {
+  method: 'POST',
+  body: form
+})
 
     if (!res.ok) {
       const err = await res.json()
