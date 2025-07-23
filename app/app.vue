@@ -1,89 +1,119 @@
 <template>
-  <div class="p-6 max-w-5xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Создание диаграммы по отчёту</h1>
+  <div class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased">
+    <div class="container mx-auto p-4 md:p-8">
+      
+      <header class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 pb-2">
+           Диаграммы для отчетов
+        </h1>
+      </header>
 
-    <!-- Тип отчета -->
-    <div class="mb-4">
-      <label class="block font-medium mb-1">Тип отчета:</label>
-      <select v-model="selectedType" class="w-full p-2 border rounded" @change="loadTemplate">
-        <option value="">-- выберите тип отчета --</option>
-        <option v-for="option in Object.keys(reportTemplates)" :key="option" :value="option">
-          {{ option }}
-        </option>
-        <option value="custom">Другое</option>
-      </select>
+      <main class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+          
+          <!-- Left Column: Settings -->
+          <div class="space-y-8">
+            <div>
+              <label for="reportType" class="block font-medium mb-2">Тип отчета</label>
+              <select id="reportType" v-model="selectedType" @change="loadTemplate" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-400">
+                <option value="">-- выберите тип отчета --</option>
+                <option v-for="option in Object.keys(reportTemplates)" :key="option" :value="option">
+                  {{ option }}
+                </option>
+                <option value="custom">Другое</option>
+              </select>
+            </div>
+
+            <div v-if="selectedType === 'custom'">
+              <label for="customTitle" class="block font-medium mb-2">Название отчета</label>
+              <input id="customTitle" v-model="customTitle" type="text" class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder-gray-400" placeholder="Например: Спецпроект Х" />
+            </div>
+
+            <div>
+              <label for="chartColor" class="block font-medium mb-2">Выбор цвета</label>
+              <input id="chartColor" v-model="color" type="color" class="w-24 h-12 p-1 border border-gray-300 rounded-lg cursor-pointer" />
+            </div>
+          </div>
+
+          <!-- Right Column: Table -->
+          <div v-if="sectors.length > 0" class="md:col-span-1">
+            <h3 class="font-medium mb-2">Секторы диаграммы</h3>
+            <div
+              class="bg-white rounded-lg border border-gray-200 max-h-96 overflow-y-auto table-fade"
+              :class="{ 'table-fade-bottom': showFade }"
+              ref="tableWrapper"
+              @scroll="checkFade"
+            >
+              <table class="w-full">
+                <thead class="sticky top-0 bg-gray-50/95 backdrop-blur-sm">
+                  <tr>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-500">Сектор</th>
+                    <th class="p-3 text-left text-sm font-semibold text-gray-500 w-28">Процент</th>
+                    <th class="p-3 text-right text-sm font-semibold text-gray-500"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, index) in sectors" :key="index" class="border-t border-gray-100 hover:bg-gray-50/80">
+                    <td class="p-1">
+                      <input v-model="row.name" class="w-full p-2 bg-transparent border-none rounded-md focus:ring-1 focus:ring-orange-500 focus:bg-white" />
+                    </td>
+                    <td class="p-1">
+                      <input v-model.number="row.value" type="number" min="0" max="100" class="w-full p-2 bg-transparent border-none rounded-md focus:ring-1 focus:ring-orange-500 focus:bg-white" />
+                    </td>
+                    <td class="p-2 text-right">
+                      <button @click="removeRow(index)" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button @click="addRow" class="mt-4 w-full bg-orange-100/80 text-orange-800 border border-orange-200/80 px-4 py-2 rounded-lg hover:bg-orange-200/70 transition-colors">
+              Добавить строку
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-8 pt-8 border-t border-gray-100 text-center">
+           <button @click="submitForm" class="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold px-8 py-3 rounded-lg shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed" :disabled="!customTitle || sectors.length === 0 || loading">
+              <span v-if="loading" class="spinner mr-2"></span>
+              <span v-if="!loading">Сгенерировать диаграмму</span>
+              <span v-else>Генерируем...</span>
+           </button>
+        </div>
+      </main>
+
+      <!-- Result -->
+      <div v-if="imageUrl || loading" class="mt-12 bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center">
+        <h2 class="text-2xl font-bold mb-6">Результат</h2>
+        <template v-if="loading">
+          <div class="flex flex-col items-center justify-center min-h-[120px]">
+            <span class="spinner mb-4"></span>
+            <span class="text-gray-500">Генерируем диаграмму...</span>
+          </div>
+        </template>
+        <template v-else>
+          <img :src="imageUrl" alt="Сгенерированная диаграмма" class="max-w-full mx-auto border-2 border-gray-200 rounded-lg shadow-md" />
+          <a :href="imageUrl" download="diagram.png" class="mt-6 inline-block bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+            Скачать PNG
+          </a>
+        </template>
+      </div>
+
+      <!-- Error -->
+      <div v-if="error" class="mt-8 max-w-2xl mx-auto bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-center">
+        {{ error }}
+      </div>
+
     </div>
-
-    <!-- Название отчета (если Другое) -->
-    <div v-if="selectedType === 'custom'" class="mb-4">
-      <label class="block font-medium mb-1">Название отчета:</label>
-      <input v-model="customTitle" type="text" class="w-full p-2 border rounded" placeholder="Например: Спецпроект Х" />
-    </div>
-
-    <!-- Цвет -->
-    <div class="mb-4">
-      <label class="block font-medium mb-1">Цвет диаграммы:</label>
-      <input v-model="color" type="color" class="w-16 h-10 border rounded" />
-    </div>
-
-    <!-- Таблица -->
-    <div v-if="sectors.length > 0" class="mb-6">
-      <table class="w-full border border-collapse">
-        <thead>
-          <tr class="bg-gray-200 text-left">
-            <th class="p-2">Сектор</th>
-            <th class="p-2">Процент</th>
-            <th class="p-2">Действие</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in sectors" :key="index" class="border-t">
-            <td class="p-2">
-              <input v-model="row.name" class="w-full p-1 border rounded" />
-            </td>
-            <td class="p-2">
-              <input v-model.number="row.value" type="number" min="0" max="100" class="w-full p-1 border rounded" />
-            </td>
-            <td class="p-2 text-center">
-              <button @click="removeRow(index)" class="text-red-600 hover:underline">Удалить</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <button @click="addRow" class="mt-2 bg-gray-200 px-4 py-1 rounded hover:bg-gray-300">
-        Добавить строку
-      </button>
-    </div>
-
-    <!-- Отправка -->
-    <button
-      @click="submitForm"
-      class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-    >
-      Сгенерировать диаграмму
-    </button>
-
-    <!-- Результат -->
-    <div v-if="imageUrl" class="mt-6">
-      <img :src="imageUrl" alt="График" class="max-w-full border rounded" />
-      <a
-  :href="imageUrl"
-  download="diagram.png"
-  class="mt-4 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2 text-white shadow-md transition hover:bg-green-700 hover:shadow-lg"
->
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-  </svg>
-  Скачать PNG
-</a>
-    </div>
-
-    <div v-if="error" class="text-red-600 mt-4">{{ error }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onMounted, nextTick } from 'vue'
 
 interface Sector {
   name: string
@@ -105,10 +135,30 @@ const reportTemplates: Record<string, string[]> = {
 
 const selectedType = ref('')
 const customTitle = ref('')
-const color = ref('#9b5de5')
+const color = ref('#f97316')
 const sectors = ref<Sector[]>([])
 const imageUrl = ref('')
 const error = ref('')
+const loading = ref(false)
+
+// Fade effect logic for table scroll
+const tableWrapper = ref<HTMLElement | null>(null)
+const showFade = ref(false)
+
+const checkFade = () => {
+  if (!tableWrapper.value) return
+  const el = tableWrapper.value
+  showFade.value = el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+onMounted(() => {
+  nextTick(() => {
+    checkFade()
+    if (tableWrapper.value) {
+      tableWrapper.value.addEventListener('scroll', checkFade)
+    }
+  })
+})
 
 const loadTemplate = () => {
   if (selectedType.value === 'custom') {
@@ -132,12 +182,14 @@ const removeRow = (index: number) => {
 const submitForm = async () => {
   error.value = ''
   imageUrl.value = ''
+  loading.value = true
 
   const names = sectors.value.map((s) => s.name.trim()).filter(Boolean)
   const values = sectors.value.map((s) => Number(s.value))
 
   if (!customTitle.value || names.length !== values.length) {
     error.value = 'Заполните все поля перед отправкой.'
+    loading.value = false
     return
   }
 
@@ -148,14 +200,15 @@ const submitForm = async () => {
   form.append('title', customTitle.value)
 
   try {
-const res = await fetch('https://nomadreport-backend.onrender.com/generate-report', {
-  method: 'POST',
-  body: form
-})
+    const res = await fetch('http://localhost:8000/generate-report', {
+      method: 'POST',
+      body: form
+    })
 
     if (!res.ok) {
       const err = await res.json()
       error.value = err.error || 'Ошибка генерации'
+      loading.value = false
       return
     }
 
@@ -163,6 +216,38 @@ const res = await fetch('https://nomadreport-backend.onrender.com/generate-repor
     imageUrl.value = URL.createObjectURL(blob)
   } catch (e) {
     error.value = 'Сервер недоступен'
+  } finally {
+    loading.value = false
   }
 }
 </script>
+
+<style scoped>
+/* Fade effect for table scroll */
+.table-fade {
+  position: relative;
+}
+.table-fade-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0.9));
+}
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f97316;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
