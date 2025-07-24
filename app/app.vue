@@ -1,14 +1,15 @@
 <template>
-  <div class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased">
-    <div class="container mx-auto p-4 md:p-8">
-      
-      <header class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 pb-2">
-           Диаграммы для отчетов
+  <div class="bg-gray-50 min-h-screen text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+    <div class="container mx-auto p-4 md:p-8 flex-1 flex flex-col">
+      <!-- Header -->
+      <header class="flex items-center justify-center mb-12 gap-4">
+        <img src="/logo.png" alt="Logo" class="h-12 w-12 object-contain" />
+        <h1 class="text-4xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500 pb-2">
+           Эффективность реализации проекта
         </h1>
       </header>
 
-      <main class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+      <main class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex-1">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
           
           <!-- Left Column: Settings -->
@@ -108,6 +109,10 @@
       </div>
 
     </div>
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 bg-white border-t border-gray-200 text-gray-500 text-sm mt-8">
+      Данное приложение сделано Проектным офисом с любовью 
+    </footer>
   </div>
 </template>
 
@@ -126,11 +131,7 @@ const reportTemplates: Record<string, string[]> = {
   'Заемщики': ['анализ БП', 'передача в Модуль актуариев', 'BPMN заключение', 'переход с НС на СЖ', 'мокап формы запроса', 'новые печатки', 'пролонгация'],
   'Пул перестрахования': ['Входящее бордеро (старый модуль)', 'Исходящее бордеро (старый модуль)', 'Перестрахование в УСС ', 'Входящее бордеро (новый модуль)', 'Исходящее бордеро (новый модуль)', 'ЕСБД', 'Печатные формы', 'BPMN', 'Проверка квазигос'],
   'ГОНС': ['UI', 'Сервисы', 'Калькуляторы в АИС', 'BPMN', 'Выпуск доп.соглашений', 'Печатные формы', 'Выпуск полиса/заявления онлайн', 'Оплата', 'Андеррайтинг'],
-  'Madanes': ['Калькуляторы в АИС', 'UI', 'Сервисы', 'BPMN', 'Печатные формы', 'Оплата'],
-  'CRM + Camunda(GONS) MVP': ['Docker', 'Front', 'UI/UX', 'MVP', 'Backend', 'Camunda', 'BPMN'],
-  'Реинжиниринг интеграции между АИС и 1С': ['Дополнительный типа контрагента', 'Переход из XML на Json', 'Сервис по обмену контрагентов', 'Передача полиса и договоров в 1С'],
-  'Рефакторинг 1С ': ['Предпроектное обследование', 'Анализ КП', 'Анализ блоков рефакторинга'],
-  'Оптимизация банковского процессинга ': ['Сбор и анализ', 'Анализ тех. документаций FINAPI', 'Переговоры с BCC', 'Переход с банк-клиента на API']
+  'Madanes': ['Калькуляторы в АИС', 'UI', 'Сервисы', 'BPMN', 'Печатные формы', 'Оплата']
 }
 
 const selectedType = ref('')
